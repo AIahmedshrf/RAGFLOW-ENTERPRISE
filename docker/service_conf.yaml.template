@@ -7,7 +7,7 @@ admin:
 mysql:
   name: '${MYSQL_DBNAME:-rag_flow}'
   user: '${MYSQL_USER:-root}'
-  password: 'ragflow_root_ChangeMe_!23'
+  password: '${MYSQL_PASSWORD:-ragflow_root_ChangeMe_!23}'
   host: '${MYSQL_HOST:-mysql}'
   port: 3306
   max_connections: 900
@@ -15,22 +15,22 @@ mysql:
   max_allowed_packet: ${MYSQL_MAX_PACKET:-1073741824}
 minio:
   user: '${MINIO_USER:-rag_flow}'
-  password: "ragflow_redis_ChangeMe_123"
+  password: "${MINIO_PASSWORD:-ragflow_minio_ChangeMe_!23}"
   host: '${MINIO_HOST:-minio}:9000'
 es:
-  hosts: "http://elastic:ragflow_es_ChangeMe_!23@es01:9200"
+  hosts: "http://elastic:${ELASTIC_PASSWORD:-ragflow_es_password123}@es01:9200"
   username: "elastic"
-  password: "ragflow_es_ChangeMe_!23"
+  password: "${ELASTIC_PASSWORD:-ragflow_es_password123}"
 os:
   hosts: 'http://${OS_HOST:-opensearch01}:9201'
   username: '${OS_USER:-admin}'
-  password: "ragflow_redis_ChangeMe_123"
+  password: "${OPENSEARCH_PASSWORD:-ragflow_os_ChangeMe_!23}"
 infinity:
   uri: '${INFINITY_HOST:-infinity}:23817'
   db_name: 'default_db'
 redis:
   db: 1
-  password: "ragflow_redis_ChangeMe_123"
+  password: "${REDIS_PASSWORD:-ragflow_redis_ChangeMe_123}"
   host: '${REDIS_HOST:-redis}:6379'
 user_default_llm:
   default_models:
