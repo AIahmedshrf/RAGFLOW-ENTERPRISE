@@ -4,19 +4,25 @@ include:
 services:
   ragflow-cpu:
     depends_on:
-      mysql: { condition: service_healthy }
-      es01:  { condition: service_healthy }
-      redis: { condition: service_healthy }
-      tei-cpu: { condition: service_healthy }
-      rerank: { condition: service_started }
-    profiles: [ cpu ]
+      mysql:
+        condition: service_healthy
+      es01:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      tei-cpu:
+        condition: service_healthy
+      rerank:
+        condition: service_started
+    profiles:
+      - cpu
     image: ${RAGFLOW_IMAGE}
     ports:
-      - "8080:80"
-      - "8443:443"
-      - "${SVR_HTTP_PORT:-9380}:9380"
+      - "8080:80"                       # HTTP (host:container)
+      - "8443:443"                      # HTTPS (host:container)
+      - "${SVR_HTTP_PORT:-9380}:9380"   # API
       - "${ADMIN_SVR_HTTP_PORT:-9381}:9381"
-      - "${SVR_MCP_PORT:-9382}:9382"
+      - "${SVR_MCP_PORT:-9382}:9382"    # MCP entry
     volumes:
       - ./ragflow-logs:/ragflow/logs
       - ./nginx/ragflow.conf:/etc/nginx/conf.d/ragflow.conf
@@ -26,19 +32,26 @@ services:
       - ./service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template
       - ./entrypoint.sh:/ragflow/entrypoint.sh
     env_file: .env
-    networks: [ ragflow ]
+    networks:
+      - ragflow
     restart: on-failure
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
   ragflow-gpu:
     depends_on:
-      mysql: { condition: service_healthy }
-      es01:  { condition: service_healthy }
-      redis: { condition: service_healthy }
-      tei-gpu: { condition: service_healthy }
-      rerank: { condition: service_started }
-    profiles: [ gpu ]
+      mysql:
+        condition: service_healthy
+      es01:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      tei-gpu:
+        condition: service_healthy
+      rerank:
+        condition: service_started
+    profiles:
+      - gpu
     image: ${RAGFLOW_IMAGE}
     ports:
       - "8080:80"
@@ -55,7 +68,8 @@ services:
       - ./service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template
       - ./entrypoint.sh:/ragflow/entrypoint.sh
     env_file: .env
-    networks: [ ragflow ]
+    networks:
+      - ragflow
     restart: on-failure
     extra_hosts:
       - "host.docker.internal:host-gateway"
