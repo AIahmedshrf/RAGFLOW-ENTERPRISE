@@ -257,6 +257,9 @@ export const importWhitelistFromExcel = (file: File) => {
   return request.post<ResponseData<never>>(adminImportWhitelist, fd);
 };
 
+export const getSystemVersion = () =>
+  request.get<ResponseData<{ version: string }>>(adminGetSystemVersion);
+
 export default {
   login,
   logout,
