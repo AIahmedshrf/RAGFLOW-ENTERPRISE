@@ -8,7 +8,7 @@ services:
       es01:  { condition: service_healthy }
       redis: { condition: service_healthy }
       tei-cpu: { condition: service_healthy }
-      rerank: { condition: service_started }
+      local-reranker: { condition: service_started }
     profiles: [ cpu ]
     image: ${RAGFLOW_IMAGE}
     ports:
@@ -37,7 +37,7 @@ services:
       es01:  { condition: service_healthy }
       redis: { condition: service_healthy }
       tei-gpu: { condition: service_healthy }
-      rerank: { condition: service_started }
+      local-reranker: { condition: service_started }
     profiles: [ gpu ]
     image: ${RAGFLOW_IMAGE}
     ports:

@@ -222,12 +222,12 @@ services:
     restart: on-failure
 
   # ====== Local Reranker ======
-  rerank:
+  local-reranker:
     profiles: [ cpu, gpu ]
     build:
       context: ./rerank
     image: ${RERANK_IMAGE}
-    container_name: docker-rerank-1
+    container_name: docker-local-reranker-1
     ports:
       - "8000:8000"
     environment:

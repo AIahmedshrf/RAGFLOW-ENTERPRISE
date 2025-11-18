@@ -230,12 +230,12 @@ CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
 **3. إضافة الخدمة في docker-compose-base.yml:**
 
 ```yaml
-rerank:
+local-reranker:
   profiles: [ cpu, gpu ]
   build:
     context: ./rerank
   image: local-reranker:latest
-  container_name: docker-rerank-1
+  container_name: docker-local-reranker-1
   ports:
     - "8000:8000"  # ← تم إضافة هذا لنشر المنفذ
   environment:
@@ -250,6 +250,7 @@ rerank:
 ```
 
 **التغييرات المهمة:**
+- ✅ تم تغيير اسم الخدمة من `rerank` إلى `local-reranker` (مهم جداً!)
 - ✅ إضافة `ports: - "8000:8000"` لنشر المنفذ
 - ✅ تحديث healthcheck ليستخدم Python بدلاً من curl (غير متوفر في الصورة)
 - ✅ تم حذف `HF_HUB_ENABLE_HF_TRANSFER=1` لتجنب أخطاء المكتبات المفقودة
@@ -280,7 +281,7 @@ curl http://localhost:8000/v1/health
 ```yaml
 Provider: OpenAI-API-Compatible
 Model name: BAAI/bge-reranker-v2-m3
-Base URL: http://rerank:8000
+Base URL: http://local-reranker:8000
 API Key: dummy  (أو فارغ)
 Model Type: RERANK
 Max Tokens: 8192
@@ -288,12 +289,14 @@ Max Tokens: 8192
 
 **📌 ملاحظات مهمة:**
 - **Model name** يجب أن يكون: `BAAI/bge-reranker-v2-m3` (بالضبط كما هو)
-- **Base URL** من داخل Docker: `http://rerank:8000`
+- **Base URL** من داخل Docker: `http://local-reranker:8000` (⚠️ ليس `http://rerank:8000`)
 - **API Key**: ضع `dummy` أو اتركه فارغاً
 - **Model Type**: يجب اختيار `rerank` (صغيرة الأحرف)
 
-**⚠️ إصلاح مشكلة:**
-تم تعديل `docker/rerank/app.py` لإرجاع `results` بدلاً من `data` لتوافق مع RAGFlow API expectations.
+**⚠️ إصلاحات مهمة:**
+1. تم تغيير اسم الخدمة من `rerank` إلى `local-reranker` لتجنب تضارب مع كلمة `/rerank` في الـ URL
+2. تم تعديل `docker/rerank/app.py` لإرجاع `results` بدلاً من `data`
+3. تم إضافة endpoints بدون `/v1` للتوافق مع RAGFlow
 
 **الاستخدام:**
 - يعمل تلقائياً في الخلفية عند استخدام RAGFlow
@@ -376,6 +379,8 @@ docker compose --profile cpu up -d
 # التحقق من الخدمات
 docker compose ps
 ```
+
+**ملاحظة:** اسم الخدمة هو `local-reranker` وليس `rerank` لتجنب تضارب URL.
 
 ### 4. إضافة النماذج عبر واجهة RAGFlow
 

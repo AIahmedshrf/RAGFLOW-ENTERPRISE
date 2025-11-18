@@ -22,8 +22,19 @@ class RerankRequest(BaseModel):
 def health():
     return {"status": "ok", "model": MODEL_ID}
 
+@app.get("/health")
+def health_no_v1():
+    return {"status": "ok", "model": MODEL_ID}
+
 @app.post("/v1/rerank")
+def rerank_v1(req: RerankRequest):
+    return rerank_impl(req)
+
+@app.post("/rerank")
 def rerank(req: RerankRequest):
+    return rerank_impl(req)
+
+def rerank_impl(req: RerankRequest):
     if not req.documents:
         raise HTTPException(400, "documents is empty")
     
