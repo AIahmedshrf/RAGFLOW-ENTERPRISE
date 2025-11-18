@@ -11,6 +11,8 @@ services:
       local-reranker: { condition: service_started }
     profiles: [ cpu ]
     image: ${RAGFLOW_IMAGE}
+    command:
+      - --enable-adminserver
     ports:
       - "8080:80"
       - "8443:443"
@@ -40,6 +42,8 @@ services:
       local-reranker: { condition: service_started }
     profiles: [ gpu ]
     image: ${RAGFLOW_IMAGE}
+    command:
+      - --enable-adminserver
     ports:
       - "8080:80"
       - "8443:443"

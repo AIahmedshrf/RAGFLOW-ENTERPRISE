@@ -8,12 +8,53 @@
 
 ## 🔐 كيفية الوصول إلى Admin UI
 
-### 1. **الرابط:**
+### **⚠️ متطلب مهم: تفعيل Admin Server**
+
+**Admin UI يتطلب تفعيل Admin Service أولاً!**
+
+#### **الخطوة 1: تفعيل Admin Server**
+
+**تعديل `docker/docker-compose.yml`:**
+
+```yaml
+services:
+  ragflow-cpu:
+    depends_on:
+      # ... dependencies ...
+    profiles: [ cpu ]
+    image: ${RAGFLOW_IMAGE}
+    command:
+      - --enable-adminserver  # ← أضف هذا!
+    ports:
+      - "8080:80"
+      - "${ADMIN_SVR_HTTP_PORT:-9381}:9381"  # ← تأكد من نشر المنفذ
+      # ... rest of config ...
+```
+
+**تطبيق التغييرات:**
+
+```bash
+cd /srv/projects/RAGFLOW-ENTERPRISE/docker
+docker compose --profile cpu up -d
+```
+
+**التحقق من التفعيل:**
+
+```bash
+# يجب أن يعيد: {"code":401,"data":null,"message":"Authentication required"}
+curl http://localhost:9381/api/v1/admin/auth
+```
+
+---
+
+### **الخطوة 2: الوصول إلى Admin UI**
+
+#### 1. **الرابط:**
 ```
 http://YOUR_SERVER_IP:8080/admin
 ```
 
-### 2. **بيانات الدخول الافتراضية:**
+#### 2. **بيانات الدخول الافتراضية:**
 
 | البريد الإلكتروني | كلمة المرور |
 |------------------|------------|
@@ -202,6 +243,44 @@ ragflow-cli -h 127.0.0.1 -p 9381
 
 ## 🚨 استكشاف الأخطاء
 
+### **الخطأ 0: صفحة 404 عند زيارة /admin**
+
+**الأعراض:**
+```
+404
+Page not found, please enter a correct address.
+```
+
+**السبب:**
+Admin Server **غير مُفعّل** في docker-compose.yml
+
+**الحل:**
+```yaml
+# في docker/docker-compose.yml
+services:
+  ragflow-cpu:
+    command:
+      - --enable-adminserver  # ← أضف هذا
+```
+
+**التطبيق:**
+```bash
+cd /srv/projects/RAGFLOW-ENTERPRISE/docker
+docker compose --profile cpu up -d
+```
+
+**التحقق:**
+```bash
+# يجب أن ترى: "RAGFlow Admin service start..."
+docker logs docker-ragflow-cpu-1 | grep -i admin
+
+# اختبار API
+curl http://localhost:9381/api/v1/admin/auth
+# يجب أن يعيد: {"code":401,"data":null,"message":"Authentication required"}
+```
+
+---
+
 ### **الخطأ 1: "Not admin" (403)**
 
 **السبب:**
@@ -219,7 +298,7 @@ docker exec docker-mysql-1 mysql -uroot -p'ragflow_root_ChangeMe_!23' -D rag_flo
 
 ---
 
-### **الخطأ 2: صفحة 404 عند زيارة /admin**
+### **الخطأ 2: صفحة 404 عند زيارة /admin (بعد التفعيل)**
 
 **السبب:** لم تسجل الدخول بعد.
 
