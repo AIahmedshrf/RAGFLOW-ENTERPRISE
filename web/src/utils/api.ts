@@ -262,4 +262,9 @@ export default {
   adminDeleteWhitelistEntry: (email: string) =>
     `${ExternalApi}${api_host}/admin/whitelist/${email}`,
   adminImportWhitelist: `${ExternalApi}${api_host}/admin/whitelist/batch`,
+  
+  adminGetSystemVersion: `${ExternalApi}${api_host}/admin/system/version`,
+  adminGetDashboardMetrics: `${ExternalApi}${api_host}/admin/dashboard/metrics`,
+  adminGetUserStats: `${ExternalApi}${api_host}/admin/dashboard/stats/users`,
+  adminGetSystemStats: `${ExternalApi}${api_host}/admin/dashboard/stats/system`,
 };

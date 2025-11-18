@@ -1,0 +1,45 @@
+.activityFeed {
+  max-height: 400px;
+  overflow-y: auto;
+
+  :global(.ant-list-item) {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.activityTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.activityMeta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.user {
+  font-weight: 500;
+}
+
+.timestamp {
+  color: var(--text-tertiary);
+}
+
+.emptyState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: var(--text-secondary);
+}

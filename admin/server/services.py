@@ -44,6 +44,88 @@ class UserMgr:
                 'is_superuser': user.is_superuser,
             })
         return result
+    
+    @staticmethod
+    def get_total_user_count():
+        """Get total number of users"""
+        return UserService.get_all_users().count()
+    
+    @staticmethod
+    def get_active_user_count(days=7):
+        """Get count of active users in last N days"""
+        from datetime import datetime, timedelta
+        cutoff_date = datetime.now() - timedelta(days=days)
+        users = UserService.get_all_users()
+        active_count = sum(1 for u in users if u.last_login_time and u.last_login_time > cutoff_date)
+        return active_count
+    
+    @staticmethod
+    def get_new_user_count(days=30):
+        """Get count of new users in last N days"""
+        from datetime import datetime, timedelta
+        cutoff_date = datetime.now() - timedelta(days=days)
+        users = UserService.get_all_users()
+        new_count = sum(1 for u in users if u.create_date and u.create_date > cutoff_date)
+        return new_count
+    
+    @staticmethod
+    def get_users_by_role():
+        """Get user count by role"""
+        users = UserService.get_all_users()
+        admins = sum(1 for u in users if u.is_superuser)
+        regular = len(users) - admins
+        return {'admin': admins, 'user': regular}
+    
+    @staticmethod
+    def get_daily_active_users(date):
+        """Get active user count for a specific date"""
+        from datetime import datetime, timedelta
+        target_date = datetime.strptime(date, '%Y-%m-%d')
+        next_day = target_date + timedelta(days=1)
+        users = UserService.get_all_users()
+        count = sum(1 for u in users if u.last_login_time and 
+                   target_date <= u.last_login_time < next_day)
+        return count
+    
+    @staticmethod
+    def get_top_active_users(limit=10, days=30):
+        """Get most active users"""
+        # This is a simplified implementation
+        # In production, you'd track user activity in a separate table
+        users = UserService.get_all_users()
+        from datetime import datetime, timedelta
+        cutoff_date = datetime.now() - timedelta(days=days)
+        
+        active_users = []
+        for user in users:
+            if user.last_login_time and user.last_login_time > cutoff_date:
+                active_users.append({
+                    'email': user.email,
+                    'nickname': user.nickname,
+                    'last_login': user.last_login_time.isoformat() if user.last_login_time else None,
+                })
+        
+        # Sort by last_login and limit
+        active_users.sort(key=lambda x: x['last_login'] or '', reverse=True)
+        return active_users[:limit]
+    
+    @staticmethod
+    def get_recent_activities(limit=10):
+        """Get recent user activities"""
+        # Simplified implementation - returns recent user creations
+        users = UserService.get_all_users()
+        activities = []
+        
+        for user in sorted(users, key=lambda x: x.create_date or datetime.min, reverse=True)[:limit]:
+            activities.append({
+                'id': user.id,
+                'type': 'user_created',
+                'user': user.email,
+                'description': f'User {user.email} was created',
+                'timestamp': user.create_date.isoformat() if user.create_date else None,
+            })
+        
+        return activities
 
     @staticmethod
     def get_user_details(username):

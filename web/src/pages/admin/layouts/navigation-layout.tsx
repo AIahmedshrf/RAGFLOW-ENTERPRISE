@@ -5,6 +5,7 @@ import { NavLink, Outlet, useNavigate } from 'umi';
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 import {
+  LucideLayoutDashboard,
   LucideMonitor,
   LucideServerCrash,
   LucideSquareUserRound,
@@ -33,6 +34,11 @@ const AdminNavigationLayout = () => {
 
   const navItems = useMemo(
     () => [
+      {
+        path: Routes.AdminDashboard,
+        name: t('admin.dashboard'),
+        icon: <LucideLayoutDashboard className="size-[1em]" />,
+      },
       {
         path: Routes.AdminServices,
         name: t('admin.serviceStatus'),

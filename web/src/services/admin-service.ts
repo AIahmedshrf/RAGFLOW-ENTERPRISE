@@ -134,6 +134,11 @@ const {
   adminUpdateWhitelistEntry,
   adminDeleteWhitelistEntry,
   adminImportWhitelist,
+  
+  adminGetSystemVersion,
+  adminGetDashboardMetrics,
+  adminGetUserStats,
+  adminGetSystemStats,
 } = api;
 
 type ResponseData<D = NonNullable<unknown>> = {
@@ -260,6 +265,17 @@ export const importWhitelistFromExcel = (file: File) => {
 export const getSystemVersion = () =>
   request.get<ResponseData<{ version: string }>>(adminGetSystemVersion);
 
+export const getDashboardMetrics = () =>
+  request.get<ResponseData<AdminService.DashboardMetrics>>(adminGetDashboardMetrics);
+
+export const getUserStats = (days?: number) =>
+  request.get<ResponseData<AdminService.UserStats>>(adminGetUserStats, {
+    params: { days },
+  });
+
+export const getSystemStats = () =>
+  request.get<ResponseData<AdminService.SystemStats>>(adminGetSystemStats);
+
 export default {
   login,
   logout,
@@ -271,4 +287,7 @@ export default {
   deleteUser,
   listUserDatasets,
   listUserAgents,
+  getDashboardMetrics,
+  getUserStats,
+  getSystemStats,
 };

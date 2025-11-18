@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
+    "@ant-design/plots": "^2.6.6",
     "@ant-design/pro-components": "^2.6.46",
     "@ant-design/pro-layout": "^7.17.16",
     "@antv/g2": "^5.2.10",
@@ -69,6 +70,7 @@
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.10",
     "dompurify": "^3.1.6",
     "eventsource-parser": "^1.1.2",

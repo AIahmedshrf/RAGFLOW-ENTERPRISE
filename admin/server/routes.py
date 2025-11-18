@@ -361,7 +361,6 @@ def update_user_role(user_name: str):
 
 
 @admin_bp.route('/users/<user_name>/permission', methods=['GET'])
-@login_required
 @check_admin_auth
 def get_user_permission(user_name: str):
     try:
@@ -369,3 +368,125 @@ def get_user_permission(user_name: str):
         return success_response(res)
     except Exception as e:
         return error_response(str(e), 500)
+
+
+# Dashboard endpoints
+@admin_bp.route('/dashboard/metrics', methods=['GET'])
+@check_admin_auth
+def get_dashboard_metrics():
+    """Get comprehensive dashboard metrics"""
+    try:
+        from datetime import datetime, timedelta
+        
+        # User metrics
+        total_users = UserMgr.get_total_user_count()
+        active_users_7d = UserMgr.get_active_user_count(days=7)
+        
+        # Service metrics
+        services = ServiceMgr.get_all_services()
+        active_services = sum(1 for s in services if s.get('status') == 'running')
+        total_services = len(services)
+        
+        # User activity trend (last 7 days)
+        user_activity = []
+        for i in range(6, -1, -1):
+            date = (datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d')
+            count = UserMgr.get_daily_active_users(date)
+            user_activity.append({'date': date, 'count': count})
+        
+        # Recent activities
+        recent_activities = UserMgr.get_recent_activities(limit=10)
+        
+        metrics = {
+            'totalUsers': total_users,
+            'activeUsers7d': active_users_7d,
+            'totalKnowledgeBases': 0,  # Placeholder
+            'totalConversations': 0,  # Placeholder
+            'activeConversations7d': 0,  # Placeholder
+            'totalDocuments': 0,  # Placeholder
+            'documentsProcessed7d': 0,  # Placeholder
+            'activeAgents': 0,  # Placeholder
+            'activeServices': active_services,
+            'totalServices': total_services,
+            'userActivity': user_activity,
+            'apiUsage': [],  # Placeholder
+            'storageUsage': [],  # Placeholder
+            'recentActivities': recent_activities,
+        }
+        
+        return success_response(metrics)
+        
+    except Exception as e:
+        return error_response(str(e), 500)
+
+
+@admin_bp.route('/dashboard/stats/users', methods=['GET'])
+@check_admin_auth
+def get_user_stats():
+    """Get detailed user statistics"""
+    try:
+        days = request.args.get('days', 30, type=int)
+        
+        stats = {
+            'total': UserMgr.get_total_user_count(),
+            'active': UserMgr.get_active_user_count(days=days),
+            'new': UserMgr.get_new_user_count(days=days),
+            'byRole': UserMgr.get_users_by_role(),
+            'topActiveUsers': UserMgr.get_top_active_users(limit=10, days=days),
+        }
+        
+        return success_response(stats)
+        
+    except Exception as e:
+        return error_response(str(e), 500)
+
+
+@admin_bp.route('/dashboard/stats/system', methods=['GET'])
+@check_admin_auth
+def get_system_stats():
+    """Get system resource statistics"""
+    try:
+        import psutil
+        
+        cpu_percent = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+        
+        stats = {
+            'cpu': {
+                'percent': cpu_percent,
+                'count': psutil.cpu_count(),
+            },
+            'memory': {
+                'total': memory.total,
+                'available': memory.available,
+                'percent': memory.percent,
+                'used': memory.used,
+            },
+            'disk': {
+                'total': disk.total,
+                'used': disk.used,
+                'free': disk.free,
+                'percent': disk.percent,
+            },
+            'network': {
+                'connections': len(psutil.net_connections()),
+            }
+        }
+        
+        return success_response(stats)
+        
+    except Exception as e:
+        return error_response(str(e), 500)
+
+
+@admin_bp.route('/system/version', methods=['GET'])
+def get_system_version():
+    """Get system version - no auth required"""
+    try:
+        from api import settings
+        version = getattr(settings, 'RAGFLOW_VERSION', 'v0.21.1')
+        return success_response({'version': version})
+    except Exception as e:
+        return error_response(str(e), 500)
+

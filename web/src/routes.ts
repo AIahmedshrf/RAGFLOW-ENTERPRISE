@@ -52,6 +52,7 @@ export enum Routes {
   Admin = '/admin',
   AdminServices = `${Admin}/services`,
   AdminUserManagement = `${Admin}/users`,
+  AdminDashboard = `${Admin}/dashboard`,
   AdminWhitelist = `${Admin}/whitelist`,
   AdminRoles = `${Admin}/roles`,
   AdminMonitoring = `${Admin}/monitoring`,
@@ -423,6 +424,10 @@ const routes = [
         component: `@/pages/admin/layouts/navigation-layout`,
         wrappers: ['@/pages/admin/wrappers/authorized'],
         routes: [
+          {
+            path: Routes.AdminDashboard,
+            component: `@/pages/admin/dashboard`,
+          },
           {
             path: Routes.AdminServices,
             component: `@/pages/admin/service-status`,
