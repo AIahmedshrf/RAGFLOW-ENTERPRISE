@@ -26,13 +26,27 @@ def health():
 def rerank(req: RerankRequest):
     if not req.documents:
         raise HTTPException(400, "documents is empty")
+    
+    # Compute scores for all documents
     with torch.no_grad():
         inputs = tokenizer([req.query]*len(req.documents),
                            req.documents,
                            padding=True, truncation=True, max_length=512, return_tensors="pt")
         scores = model(**inputs).logits.squeeze(-1).tolist()
-    ranked = sorted(zip(req.documents, scores), key=lambda x: x[1], reverse=True)
-    k = min(req.top_n or 5, len(ranked))
-    data = [{"index": i, "relevance_score": float(s), "document": d}
-            for i,(d,s) in enumerate(ranked[:k])]
-    return {"object":"list","model": req.model or MODEL_ID,"data": data}
+    
+    # Create results with original indices
+    results = [
+        {"index": i, "relevance_score": float(score), "document": doc}
+        for i, (doc, score) in enumerate(zip(req.documents, scores))
+    ]
+    
+    # Sort by relevance_score descending
+    results_sorted = sorted(results, key=lambda x: x["relevance_score"], reverse=True)
+    
+    # Return top_n results (RAGFlow expects "results" key, not "data")
+    k = min(req.top_n or len(req.documents), len(results_sorted))
+    return {
+        "object": "list",
+        "model": req.model or MODEL_ID,
+        "results": results_sorted[:k]
+    }
