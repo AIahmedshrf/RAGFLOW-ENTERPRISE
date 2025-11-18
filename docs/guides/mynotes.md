@@ -425,3 +425,16 @@ Step 2: Run **jina_server.py**, specifying either the model's name or its local 
 python jina_server.py  --model_name gpt2
 ```
 > The script only supports models downloaded from Hugging Face.
+---
+
+⚡ الحل - الخطوات التنفيذية:
+📌 الخطوة 1: التحقق من حالة جميع الخدمات
+cd /srv/projects/RAGFLOW-ENTERPRISE/docker
+docker compose --profile cpu ps -a
+
+🔄 خطوات إعادة التشغيل
+
+📌 الخطوة 2: إعادة تشغيل جميع الخدمات
+
+cd /srv/projects/RAGFLOW-ENTERPRISE/docker
+docker compose --profile cpu up -d

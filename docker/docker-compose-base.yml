@@ -228,11 +228,13 @@ services:
       context: ./rerank
     image: ${RERANK_IMAGE}
     container_name: docker-rerank-1
+    ports:
+      - "8000:8000"
     environment:
       - RERANK_MODEL=${RERANK_MODEL_ID}
     networks: [ ragflow ]
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8000/v1/health >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "python3 -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/v1/health\")' || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 30
