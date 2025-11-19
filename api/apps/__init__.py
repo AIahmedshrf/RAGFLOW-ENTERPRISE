@@ -141,6 +141,24 @@ client_urls_prefix = [
     register_page(path) for dir in pages_dir for path in search_pages_path(dir)
 ]
 
+# Register admin routes for Enterprise Edition
+try:
+    import sys
+    from pathlib import Path
+    admin_server_path = Path(__file__).parent.parent.parent / "admin" / "server"
+    if str(admin_server_path) not in sys.path:
+        sys.path.insert(0, str(admin_server_path))
+    
+    from routes import admin_bp
+    app.register_blueprint(admin_bp)
+    logging.info("✅ Admin blueprint registered in main Flask app")
+except ImportError as e:
+    logging.warning(f"⚠️ Admin blueprint not available: {e}")
+except Exception as e:
+    logging.error(f"❌ Failed to register admin blueprint: {e}")
+    import traceback
+    logging.error(traceback.format_exc())
+
 
 @login_manager.request_loader
 def load_user(web_request):

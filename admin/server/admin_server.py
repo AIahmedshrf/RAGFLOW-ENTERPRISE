@@ -23,6 +23,8 @@ import traceback
 from werkzeug.serving import run_simple
 from flask import Flask
 from routes import admin_bp
+# dashboard endpoints are now in routes.py
+import monitoring  # Import monitoring endpoints  
 from common.log_utils import init_root_logger
 from common.constants import SERVICE_CONF
 from common.config_utils import show_configs
@@ -67,8 +69,8 @@ if __name__ == '__main__':
             port=9381,
             application=app,
             threaded=True,
-            use_reloader=True,
-            use_debugger=True,
+            use_reloader=False,  # Disable reloader in production
+            use_debugger=False,  # Disable debugger
         )
     except Exception:
         traceback.print_exc()
