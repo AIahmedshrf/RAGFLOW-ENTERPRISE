@@ -490,3 +490,46 @@ def get_system_version():
     except Exception as e:
         return error_response(str(e), 500)
 
+
+# Audit Log endpoints
+@admin_bp.route('/audit/logs', methods=['GET'])
+@check_admin_auth
+def get_audit_logs():
+    """Get audit logs with filtering and pagination"""
+    try:
+        from audit import AuditLog
+        
+        limit = request.args.get('limit', 100, type=int)
+        offset = request.args.get('offset', 0, type=int)
+        action = request.args.get('action')
+        resource_type = request.args.get('resource_type')
+        user_email = request.args.get('user')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        result = AuditLog.get_logs(
+            limit=limit,
+            offset=offset,
+            action=action,
+            resource_type=resource_type,
+            user_email=user_email,
+            start_date=start_date,
+            end_date=end_date
+        )
+        
+        return success_response(result)
+    except Exception as e:
+        return error_response(str(e), 500)
+
+
+@admin_bp.route('/audit/stats', methods=['GET'])
+@check_admin_auth
+def get_audit_stats():
+    """Get audit log statistics"""
+    try:
+        from audit import AuditLog
+        stats = AuditLog.get_stats()
+        return success_response(stats)
+    except Exception as e:
+        return error_response(str(e), 500)
+
