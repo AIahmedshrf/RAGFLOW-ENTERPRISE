@@ -236,11 +236,13 @@ if [[ "${ENABLE_WEBSERVER}" -eq 1 ]]; then
     done &
 fi
 
+# Admin routes are now integrated in ragflow_server (port 9380)
+# Separate admin_server on port 9381 is disabled to avoid conflicts
 if [[ "${ENABLE_ADMIN_SERVER}" -eq 1 ]]; then
-    echo "Starting admin_server..."
-    while true; do
-        "$PY" admin/server/admin_server.py
-    done &
+    echo "Admin routes integrated in main app (admin_server disabled)"
+    # while true; do
+    #     "$PY" admin/server/admin_server.py
+    # done &
 fi
 
 if [[ "${ENABLE_MCP_SERVER}" -eq 1 ]]; then

@@ -23,8 +23,8 @@ import traceback
 from werkzeug.serving import run_simple
 from flask import Flask
 from routes import admin_bp
-# dashboard endpoints are now in routes.py
-import monitoring  # Import monitoring endpoints  
+# dashboard endpoints are in routes.py
+# monitoring endpoints require flask_socketio (not loaded here)
 from common.log_utils import init_root_logger
 from common.constants import SERVICE_CONF
 from common.config_utils import show_configs

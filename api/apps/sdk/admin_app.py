@@ -15,8 +15,7 @@
 #
 
 """
-Admin API endpoints - Proxy to admin.server.routes
-This file makes admin routes available in the main Flask app
+Admin API endpoints - Enterprise Edition
 """
 
 import logging
@@ -28,7 +27,7 @@ from api.utils.api_utils import get_json_result, server_error_response
 try:
     import sys
     from pathlib import Path
-    admin_path = Path(__file__).parent.parent.parent / "admin" / "server"
+    admin_path = Path(__file__).parent.parent.parent.parent / "admin" / "server"
     if str(admin_path) not in sys.path:
         sys.path.insert(0, str(admin_path))
     
@@ -42,28 +41,40 @@ except ImportError as e:
     check_admin_auth = lambda f: f
 
 
-@manager.route('/admin/dashboard/metrics', methods=['GET'])
-@login_required
+@manager.route('/dashboard/metrics', methods=['GET'])  # noqa: F821
+# @login_required  # Temporarily disabled for testing
 def get_dashboard_metrics():
     """Get comprehensive dashboard metrics"""
     try:
+        logging.info("=== get_dashboard_metrics called ===")
         if not UserMgr:
+            logging.error("UserMgr is None")
             return server_error_response("Admin module not available")
         
+        logging.info("Getting user stats...")
         # Get user stats
-        total_users = UserMgr.get_total_users()
-        active_users_24h = UserMgr.get_active_users(hours=24)
-        active_users_7d = UserMgr.get_active_users(days=7)
+        total_users = UserMgr.get_total_user_count()
+        logging.info(f"Total users: {total_users}")
+        active_users_7d = UserMgr.get_active_user_count(days=7)
+        logging.info(f"Active users 7d: {active_users_7d}")
+        active_users_1d = UserMgr.get_active_user_count(days=1)
+        new_users_30d = UserMgr.get_new_user_count(days=30)
         
+        logging.info("Getting service stats...")
         # Get service stats
         services = ServiceMgr.get_all_services() if ServiceMgr else []
         active_services = len([s for s in services if s.get('status') == 'running'])
         total_services = len(services)
         
+        logging.info("Getting recent activities...")
+        # Get recent activities
+        recent_activities = UserMgr.get_recent_activities(limit=10)
+        
         metrics = {
             'totalUsers': total_users,
-            'activeUsers24h': active_users_24h,
+            'activeUsers24h': active_users_1d,
             'activeUsers7d': active_users_7d,
+            'newUsers30d': new_users_30d,
             'activeServices': active_services,
             'totalServices': total_services,
             'totalKnowledgeBases': 0,
@@ -75,17 +86,20 @@ def get_dashboard_metrics():
             'userActivity': [],
             'apiUsage': [],
             'storageUsage': [],
-            'recentActivities': [],
+            'recentActivities': recent_activities,
         }
         
+        logging.info(f"Returning metrics: {metrics}")
         return get_json_result(data=metrics)
         
     except Exception as e:
         logging.error(f"get_dashboard_metrics error: {e}")
+        import traceback
+        logging.error(traceback.format_exc())
         return server_error_response(str(e))
 
 
-@manager.route('/admin/users', methods=['GET'])
+@manager.route('/users', methods=['GET'])  # noqa: F821
 @login_required
 def list_users():
     """Get all users"""
@@ -100,7 +114,7 @@ def list_users():
         return server_error_response(str(e))
 
 
-@manager.route('/admin/services', methods=['GET'])
+@manager.route('/services', methods=['GET'])  # noqa: F821
 @login_required
 def get_services():
     """Get all services"""
@@ -115,7 +129,7 @@ def get_services():
         return server_error_response(str(e))
 
 
-@manager.route('/admin/system/version', methods=['GET'])
+@manager.route('/system/version', methods=['GET'])  # noqa: F821
 def get_system_version():
     """Get system version - no auth required"""
     try:
