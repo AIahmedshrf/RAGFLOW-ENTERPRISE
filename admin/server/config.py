@@ -26,14 +26,12 @@ from urllib.parse import urlparse
 
 
 class ServiceConfigs:
-    configs = dict
-
     def __init__(self):
         self.configs = []
         self.lock = threading.Lock()
 
 
-SERVICE_CONFIGS = ServiceConfigs
+SERVICE_CONFIGS = ServiceConfigs()
 
 
 class ServiceType(Enum):

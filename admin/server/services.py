@@ -48,7 +48,7 @@ class UserMgr:
     @staticmethod
     def get_total_user_count():
         """Get total number of users"""
-        return UserService.get_all_users().count()
+        return len(UserService.get_all_users())
     
     @staticmethod
     def get_active_user_count(days=7):

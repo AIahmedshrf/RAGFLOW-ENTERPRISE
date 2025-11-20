@@ -23,6 +23,9 @@ from flask import request, jsonify
 from flask_login import login_required, current_user
 from api.utils.api_utils import get_json_result, server_error_response
 
+# Override page_name to prevent double /admin prefix
+page_name = ""
+
 # Import admin functions
 try:
     import sys
@@ -33,7 +36,12 @@ try:
     
     from admin.server.services import UserMgr, ServiceMgr
     from admin.server.auth import check_admin_auth
-    logging.info("Admin modules imported successfully")
+    from admin.server.config import SERVICE_CONFIGS, load_configurations
+    from common.constants import SERVICE_CONF
+    
+    # Load service configurations on startup
+    SERVICE_CONFIGS.configs = load_configurations(SERVICE_CONF)
+    logging.info(f"Admin modules imported successfully, loaded {len(SERVICE_CONFIGS.configs)} services")
 except ImportError as e:
     logging.error(f"Failed to import admin modules: {e}")
     UserMgr = None
@@ -41,7 +49,7 @@ except ImportError as e:
     check_admin_auth = lambda f: f
 
 
-@manager.route('/dashboard/metrics', methods=['GET'])  # noqa: F821
+@manager.route('/admin/dashboard/metrics', methods=['GET'])  # noqa: F821
 # @login_required  # Temporarily disabled for testing
 def get_dashboard_metrics():
     """Get comprehensive dashboard metrics"""
@@ -99,7 +107,7 @@ def get_dashboard_metrics():
         return server_error_response(str(e))
 
 
-@manager.route('/users', methods=['GET'])  # noqa: F821
+@manager.route('/admin/users', methods=['GET'])  # noqa: F821
 @login_required
 def list_users():
     """Get all users"""
@@ -114,7 +122,7 @@ def list_users():
         return server_error_response(str(e))
 
 
-@manager.route('/services', methods=['GET'])  # noqa: F821
+@manager.route('/admin/services', methods=['GET'])  # noqa: F821
 @login_required
 def get_services():
     """Get all services"""
@@ -129,7 +137,7 @@ def get_services():
         return server_error_response(str(e))
 
 
-@manager.route('/system/version', methods=['GET'])  # noqa: F821
+@manager.route('/admin/system/version', methods=['GET'])  # noqa: F821
 def get_system_version():
     """Get system version - no auth required"""
     try:
