@@ -302,6 +302,27 @@ def list_roles():
         return error_response(str(e), 500)
 
 
+@admin_bp.route('/roles_with_permission', methods=['GET'])
+@login_required
+@check_admin_auth
+def list_roles_with_permission():
+    """List all roles with their permissions"""
+    try:
+        roles_data = RoleMgr.list_roles()
+        roles_with_perms = []
+        
+        for role in roles_data['roles']:
+            role_name = role['role_name']
+            perm_data = RoleMgr.get_role_permission(role_name)
+            role_copy = role.copy()
+            role_copy['permissions'] = perm_data.get('permissions', {})
+            roles_with_perms.append(role_copy)
+        
+        return success_response({"roles": roles_with_perms, "total": len(roles_with_perms)})
+    except Exception as e:
+        return error_response(str(e), 500)
+
+
 @admin_bp.route('/roles/<role_name>/permission', methods=['GET'])
 @login_required
 @check_admin_auth
@@ -341,6 +362,18 @@ def revoke_role_permission(role_name: str):
         resource: str = data['resource']
         res = RoleMgr.revoke_role_permission(role_name, actions, resource)
         return success_response(res)
+    except Exception as e:
+        return error_response(str(e), 500)
+
+
+@admin_bp.route('/roles/resource', methods=['GET'])
+@login_required
+@check_admin_auth
+def list_resources():
+    """List available resource types for RBAC"""
+    try:
+        from admin.server.roles import RESOURCE_TYPES
+        return success_response({"resource_types": RESOURCE_TYPES})
     except Exception as e:
         return error_response(str(e), 500)
 

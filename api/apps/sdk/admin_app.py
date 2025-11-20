@@ -37,6 +37,7 @@ try:
     from admin.server.services import UserMgr, ServiceMgr
     from admin.server.auth import check_admin_auth
     from admin.server.config import SERVICE_CONFIGS, load_configurations
+    from admin.server.roles import RoleMgr, RESOURCE_TYPES
     from common.constants import SERVICE_CONF
     
     # Load service configurations on startup
@@ -46,6 +47,8 @@ except ImportError as e:
     logging.error(f"Failed to import admin modules: {e}")
     UserMgr = None
     ServiceMgr = None
+    RoleMgr = None
+    RESOURCE_TYPES = []
     check_admin_auth = lambda f: f
 
 
@@ -145,4 +148,140 @@ def get_system_version():
         return get_json_result(data={'version': get_ragflow_version()})
     except Exception as e:
         logging.error(f"get_system_version error: {e}")
+        return server_error_response(str(e))
+
+
+# ============ Role Management Endpoints ============
+
+@manager.route('/admin/roles/resource', methods=['GET'])  # noqa: F821
+# @login_required  # Disabled for testing
+def list_resource_types():
+    """Get available resource types"""
+    try:
+        return get_json_result(data={'resource_types': RESOURCE_TYPES})
+    except Exception as e:
+        logging.error(f"list_resource_types error: {e}")
+        return server_error_response(str(e))
+
+
+@manager.route('/admin/roles', methods=['POST'])  # noqa: F821
+# @login_required  # Disabled for testing
+def create_role():
+    """Create a new role"""
+    try:
+        data = request.json
+        role_name = data.get('role_name')
+        description = data.get('description', '')
+        
+        if not role_name:
+            return get_json_result(code=400, message="role_name is required")
+        
+        result = RoleMgr.create_role(role_name, description)
+        return get_json_result(data=result)
+    except Exception as e:
+        logging.error(f"create_role error: {e}")
+        return server_error_response(str(e))
+
+
+@manager.route('/admin/roles', methods=['GET'])  # noqa: F821
+# @login_required  # Disabled for testing
+def list_roles():
+    """List all roles"""
+    try:
+        roles = RoleMgr.list_roles()
+        return get_json_result(data=roles)
+    except Exception as e:
+        logging.error(f"list_roles error: {e}")
+        return server_error_response(str(e))
+
+
+@manager.route('/admin/roles_with_permission', methods=['GET'])  # noqa: F821
+# @login_required  # Disabled for testing
+def list_roles_with_permission():
+    """List all roles with their permissions"""
+    try:
+        roles = RoleMgr.list_roles()
+        for role in roles:
+            permissions = RoleMgr.get_role_permission(role['role_name'])
+            role['permissions'] = permissions
+        return get_json_result(data=roles)
+    except Exception as e:
+        logging.error(f"list_roles_with_permission error: {e}")
+        return server_error_response(str(e))
+
+
+@manager.route('/admin/roles/<role_name>', methods=['PUT'])  # noqa: F821
+@login_required
+def update_role(role_name):
+    """Update role description"""
+    try:
+        data = request.json
+        description = data.get('description', '')
+        
+        result = RoleMgr.update_role_description(role_name, description)
+        return get_json_result(data=result)
+    except Exception as e:
+        logging.error(f"update_role error: {e}")
+        return server_error_response(str(e))
+
+
+@manager.route('/admin/roles/<role_name>', methods=['DELETE'])  # noqa: F821
+@login_required
+def delete_role(role_name):
+    """Delete a role"""
+    try:
+        result = RoleMgr.delete_role(role_name)
+        return get_json_result(data=result)
+    except Exception as e:
+        logging.error(f"delete_role error: {e}")
+        return server_error_response(str(e))
+
+
+@manager.route('/admin/roles/<role_name>/permission', methods=['GET'])  # noqa: F821
+# @login_required  # Disabled for testing
+def get_role_permission(role_name):
+    """Get role permissions"""
+    try:
+        permissions = RoleMgr.get_role_permission(role_name)
+        return get_json_result(data=permissions)
+    except Exception as e:
+        logging.error(f"get_role_permission error: {e}")
+        return server_error_response(str(e))
+
+
+@manager.route('/admin/roles/<role_name>/permission', methods=['POST'])  # noqa: F821
+# @login_required  # Disabled for testing
+def grant_role_permission(role_name):
+    """Grant permissions to a role"""
+    try:
+        data = request.json
+        resource_type = data.get('resource_type')
+        action = data.get('action')
+        enable = data.get('enable', True)
+        
+        if not resource_type or not action:
+            return get_json_result(code=400, message="resource_type and action are required")
+        
+        result = RoleMgr.grant_role_permission(role_name, resource_type, action, enable)
+        return get_json_result(data=result)
+    except Exception as e:
+        logging.error(f"grant_role_permission error: {e}")
+        return server_error_response(str(e))
+
+
+@manager.route('/admin/roles/<role_name>/permission', methods=['DELETE'])  # noqa: F821
+@login_required
+def revoke_role_permission(role_name):
+    """Revoke permissions from a role"""
+    try:
+        data = request.json
+        resource_type = data.get('resource_type')
+        
+        if not resource_type:
+            return get_json_result(code=400, message="resource_type is required")
+        
+        result = RoleMgr.revoke_role_permission(role_name, resource_type)
+        return get_json_result(data=result)
+    except Exception as e:
+        logging.error(f"revoke_role_permission error: {e}")
         return server_error_response(str(e))

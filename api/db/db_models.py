@@ -1108,6 +1108,40 @@ class SyncLogs(DataBaseModel):
         db_table = "sync_logs"
 
 
+class Role(DataBaseModel):
+    """
+    Enterprise Role-Based Access Control (RBAC) Model
+    Defines roles with descriptions for permission management
+    """
+    id = CharField(max_length=32, primary_key=True)
+    role_name = CharField(max_length=64, unique=True, null=False, index=True)
+    description = TextField(null=True, help_text="Role description")
+    status = CharField(max_length=1, null=False, default="1", help_text="1: active, 0: inactive", index=True)
+
+    class Meta:
+        db_table = "role"
+
+
+class RolePermission(DataBaseModel):
+    """
+    Enterprise RBAC Permission Model
+    Maps roles to resources with granular permissions (enable, read, write, share)
+    """
+    id = CharField(max_length=32, primary_key=True)
+    role_id = CharField(max_length=32, null=False, index=True)
+    resource_type = CharField(max_length=32, null=False, help_text="dataset|agent|chat|user|file", index=True)
+    enable = BooleanField(default=False, help_text="Can enable/disable resource")
+    read = BooleanField(default=False, help_text="Can read/view resource")
+    write = BooleanField(default=False, help_text="Can create/update resource")
+    share = BooleanField(default=False, help_text="Can share resource")
+
+    class Meta:
+        db_table = "role_permission"
+        indexes = (
+            (('role_id', 'resource_type'), True),  # Unique constraint on role_id + resource_type
+        )
+
+
 def migrate_db():
     logging.disable(logging.ERROR)
     migrator = DatabaseMigrator[settings.DATABASE_TYPE.upper()].value(DB)
@@ -1280,4 +1314,49 @@ def migrate_db():
         migrate(migrator.add_column("tenant_llm", "status", CharField(max_length=1, null=False, help_text="is it validate(0: wasted, 1: validate)", default="1", index=True)))
     except Exception:
         pass
+    
+    # Enterprise RBAC Tables Migration
+    try:
+        from peewee import SQL
+        DB.execute_sql('''
+            CREATE TABLE IF NOT EXISTS `role` (
+                `id` VARCHAR(32) PRIMARY KEY,
+                `role_name` VARCHAR(64) UNIQUE NOT NULL,
+                `description` TEXT,
+                `status` VARCHAR(1) NOT NULL DEFAULT '1',
+                `create_time` BIGINT,
+                `update_time` BIGINT,
+                `create_date` VARCHAR(32),
+                `update_date` VARCHAR(32),
+                INDEX idx_role_name (`role_name`),
+                INDEX idx_status (`status`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        ''')
+        logging.info("Role table created successfully")
+    except Exception as e:
+        logging.warning(f"Role table migration: {e}")
+    
+    try:
+        DB.execute_sql('''
+            CREATE TABLE IF NOT EXISTS `role_permission` (
+                `id` VARCHAR(32) PRIMARY KEY,
+                `role_id` VARCHAR(32) NOT NULL,
+                `resource_type` VARCHAR(32) NOT NULL,
+                `enable` TINYINT(1) DEFAULT 0,
+                `read` TINYINT(1) DEFAULT 0,
+                `write` TINYINT(1) DEFAULT 0,
+                `share` TINYINT(1) DEFAULT 0,
+                `create_time` BIGINT,
+                `update_time` BIGINT,
+                `create_date` VARCHAR(32),
+                `update_date` VARCHAR(32),
+                INDEX idx_role_id (`role_id`),
+                INDEX idx_resource_type (`resource_type`),
+                UNIQUE KEY uk_role_resource (`role_id`, `resource_type`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        ''')
+        logging.info("RolePermission table created successfully")
+    except Exception as e:
+        logging.warning(f"RolePermission table migration: {e}")
+    
     logging.disable(logging.NOTSET)
