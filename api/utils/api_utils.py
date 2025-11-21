@@ -85,6 +85,11 @@ def get_data_error_result(code=RetCode.DATA_ERROR, message="Sorry! Data missing!
 
 def server_error_response(e):
     logging.exception(e)
+    
+    # Handle string input (when called with str(e))
+    if isinstance(e, str):
+        return get_json_result(code=RetCode.EXCEPTION_ERROR, message=e)
+    
     try:
         msg = repr(e).lower()
         if getattr(e, "code", None) == 401 or ("unauthorized" in msg) or ("401" in msg):
@@ -92,7 +97,7 @@ def server_error_response(e):
     except Exception as ex:
         logging.warning(f"error checking authorization: {ex}")
 
-    if len(e.args) > 1:
+    if hasattr(e, 'args') and len(e.args) > 1:
         try:
             serialized_data = serialize_for_json(e.args[1])
             return get_json_result(code=RetCode.EXCEPTION_ERROR, message=repr(e.args[0]), data=serialized_data)

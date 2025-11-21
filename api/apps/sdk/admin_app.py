@@ -408,3 +408,133 @@ def revoke_role_permission(role_name):
     except Exception as e:
         logging.error(f"revoke_role_permission error: {e}")
         return server_error_response(str(e))
+
+
+# ===================== WHITELIST MANAGEMENT =====================
+
+@manager.route('/admin/whitelist', methods=['GET'])  # noqa: F821
+@login_required
+def list_whitelist():
+    """Get all whitelist entries"""
+    try:
+        from api.db.services.whitelist_service import WhitelistService
+        
+        entries = WhitelistService.get_all()
+        result = []
+        for entry in entries:
+            result.append({
+                "id": entry.id,
+                "email": entry.email,
+                "create_date": entry.create_time.strftime("%Y-%m-%d %H:%M:%S") if entry.create_time else ""
+            })
+        
+        return get_json_result(data=result)
+    except Exception as e:
+        logging.error(f"list_whitelist error: {e}")
+        return server_error_response(str(e))
+
+
+@manager.route('/admin/whitelist/add', methods=['POST'])  # noqa: F821
+@login_required
+def create_whitelist_entry():
+    """Create new whitelist entry"""
+    try:
+        from api.db.services.whitelist_service import WhitelistService
+        import re
+        
+        data = request.json
+        email = data.get('email', '').strip()
+        
+        if not email:
+            return get_json_result(code=400, message="Email is required")
+        
+        # Validate email format
+        if not re.match(r"^[\w\._-]+@([\w_-]+\.)+[\w-]{2,}$", email):
+            return get_json_result(code=400, message="Invalid email format")
+        
+        # Check if already exists
+        if WhitelistService.exists(email):
+            return get_json_result(code=400, message="Email already in whitelist")
+        
+        # Create entry
+        entry = WhitelistService.create(email)
+        if entry:
+            return get_json_result(data={
+                "id": entry.id,
+                "email": entry.email,
+                "create_date": entry.create_time.strftime("%Y-%m-%d %H:%M:%S") if entry.create_time else ""
+            })
+        else:
+            return get_json_result(code=500, message="Failed to create whitelist entry")
+    except Exception as e:
+        logging.error(f"create_whitelist_entry error: {e}")
+        return server_error_response(str(e))
+
+
+@manager.route('/admin/whitelist/<int:entry_id>', methods=['PUT'])  # noqa: F821
+@login_required
+def update_whitelist_entry(entry_id):
+    """Update whitelist entry"""
+    try:
+        from api.db.services.whitelist_service import WhitelistService
+        import re
+        
+        data = request.json
+        email = data.get('email', '').strip()
+        
+        if not email:
+            return get_json_result(code=400, message="Email is required")
+        
+        # Validate email format
+        if not re.match(r"^[\w\._-]+@([\w_-]+\.)+[\w-]{2,}$", email):
+            return get_json_result(code=400, message="Invalid email format")
+        
+        # Update entry
+        if WhitelistService.update_by_id(entry_id, email):
+            entry = WhitelistService.get_by_id(entry_id)
+            return get_json_result(data={
+                "id": entry.id,
+                "email": entry.email,
+                "create_date": entry.create_time.strftime("%Y-%m-%d %H:%M:%S") if entry.create_time else ""
+            })
+        else:
+            return get_json_result(code=404, message="Whitelist entry not found")
+    except Exception as e:
+        logging.error(f"update_whitelist_entry error: {e}")
+        return server_error_response(str(e))
+
+
+@manager.route('/admin/whitelist/<email>', methods=['DELETE'])  # noqa: F821
+@login_required
+def delete_whitelist_entry(email):
+    """Delete whitelist entry by email"""
+    try:
+        from api.db.services.whitelist_service import WhitelistService
+        
+        if WhitelistService.delete_by_email(email):
+            return get_json_result(data={"message": "Whitelist entry deleted successfully"})
+        else:
+            return get_json_result(code=404, message="Whitelist entry not found")
+    except Exception as e:
+        logging.error(f"delete_whitelist_entry error: {e}")
+        return server_error_response(str(e))
+
+
+@manager.route('/admin/whitelist/batch', methods=['POST'])  # noqa: F821
+@login_required
+def import_whitelist():
+    """Batch import whitelist entries from CSV/Excel"""
+    try:
+        from api.db.services.whitelist_service import WhitelistService
+        
+        data = request.json
+        emails = data.get('emails', [])
+        
+        if not emails or not isinstance(emails, list):
+            return get_json_result(code=400, message="emails array is required")
+        
+        result = WhitelistService.batch_create(emails)
+        return get_json_result(data=result)
+    except Exception as e:
+        logging.error(f"import_whitelist error: {e}")
+        return server_error_response(str(e))

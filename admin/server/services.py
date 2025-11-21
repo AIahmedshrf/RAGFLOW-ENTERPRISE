@@ -171,6 +171,7 @@ class UserMgr:
             "password": decrypt(password),
             "login_channel": "password",
             "is_superuser": role == "admin",
+            "role": role,  # Pass role to create_new_user
         }
         return create_new_user(user_info_dict)
 

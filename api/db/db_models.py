@@ -1142,6 +1142,18 @@ class RolePermission(DataBaseModel):
         )
 
 
+class Whitelist(DataBaseModel):
+    """
+    Enterprise Registration Whitelist Model
+    Controls which email addresses can register for the platform
+    """
+    id = IntegerField(primary_key=True)
+    email = CharField(max_length=128, unique=True, null=False, index=True, help_text="Email address allowed to register")
+    
+    class Meta:
+        db_table = "whitelist"
+
+
 def migrate_db():
     logging.disable(logging.ERROR)
     migrator = DatabaseMigrator[settings.DATABASE_TYPE.upper()].value(DB)

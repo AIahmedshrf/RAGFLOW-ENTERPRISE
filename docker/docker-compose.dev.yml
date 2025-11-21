@@ -1,0 +1,13 @@
+services:
+  ragflow-cpu:
+    volumes:
+      # Mount source code for development
+      - ../api:/ragflow/api
+      - ../admin:/ragflow/admin
+      - ../agent:/ragflow/agent
+      - ../rag:/ragflow/rag
+      - ../deepdoc:/ragflow/deepdoc
+      - ../common:/ragflow/common
+      - ../graphrag:/ragflow/graphrag
+      # Mount web for frontend development (requires build)
+      - ../web/dist:/ragflow/web/dist

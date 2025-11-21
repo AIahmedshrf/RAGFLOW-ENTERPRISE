@@ -179,6 +179,7 @@ class TenantService(CommonService):
     @classmethod
     @DB.connection_context()
     def get_info_by(cls, user_id):
+        """Get tenant info for user - accepts any role, not just OWNER"""
         fields = [
             cls.model.id.alias("tenant_id"),
             cls.model.name,
@@ -191,7 +192,7 @@ class TenantService(CommonService):
             cls.model.parser_ids,
             UserTenant.role]
         return list(cls.model.select(*fields)
-                    .join(UserTenant, on=((cls.model.id == UserTenant.tenant_id) & (UserTenant.user_id == user_id) & (UserTenant.status == StatusEnum.VALID.value) & (UserTenant.role == UserTenantRole.OWNER)))
+                    .join(UserTenant, on=((cls.model.id == UserTenant.tenant_id) & (UserTenant.user_id == user_id) & (UserTenant.status == StatusEnum.VALID.value)))
                     .where(cls.model.status == StatusEnum.VALID.value).dicts())
 
     @classmethod

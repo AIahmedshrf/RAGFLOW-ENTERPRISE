@@ -13,6 +13,9 @@ export default defineConfig({
   base: '/',
   routes,
   publicPath: '/',
+  define: {
+    'process.env.UMI_APP_RAGFLOW_ENTERPRISE': 'RAGFLOW_ENTERPRISE',
+  },
   esbuildMinifyIIFE: true,
   icons: {},
   hash: true,

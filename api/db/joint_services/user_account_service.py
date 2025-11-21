@@ -61,7 +61,7 @@ def create_new_user(user_info: dict) -> dict:
     # construct tenant info
     tenant = {
         "id": user_id,
-        "name": user_info["nickname"] + "‘s Kingdom",
+        "name": user_info["nickname"] + "'s Kingdom",
         "llm_id": settings.CHAT_MDL,
         "embd_id": settings.EMBEDDING_MDL,
         "asr_id": settings.ASR_MDL,
@@ -69,11 +69,13 @@ def create_new_user(user_info: dict) -> dict:
         "img2txt_id": settings.IMAGE2TEXT_MDL,
         "rerank_id": settings.RERANK_MDL,
     }
+    # Get role from user_info, default to 'user' if not provided
+    user_role = user_info.get("role", "user")
     usr_tenant = {
         "tenant_id": user_id,
         "user_id": user_id,
         "invited_by": user_id,
-        "role": UserTenantRole.OWNER,
+        "role": user_role,  # Use provided role instead of hardcoded OWNER
     }
     # construct file folder info
     file_id = uuid.uuid1().hex
