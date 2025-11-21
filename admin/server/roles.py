@@ -227,7 +227,7 @@ class RoleMgr:
 
     @staticmethod
     def update_user_role(user_name: str, role_name: str) -> Dict[str, Any]:
-        """Update user's role"""
+        """Update user's role in user_tenant table"""
         try:
             # Verify role exists
             role = RoleService.get_by_name(role_name)
@@ -240,12 +240,24 @@ class RoleMgr:
                 raise AdminException(f"User '{user_name}' not found", 404)
             
             user = users[0]
-            # Update user role field (assuming user.role exists)
-            # Note: This may need adjustment based on actual User model structure
-            user.role = role_name
-            user.save()
             
-            return {"user_name": user_name, "role_name": role_name}
+            # Update role in user_tenant table
+            from api.db.services.user_service import UserTenantService
+            user_tenants = UserTenantService.query(user_id=user.id)
+            
+            if not user_tenants:
+                raise AdminException(f"User '{user_name}' has no tenant association", 404)
+            
+            # Update role for all user's tenants (usually just one)
+            for user_tenant in user_tenants:
+                user_tenant.role = role_name
+                user_tenant.save()
+            
+            return {
+                "user_name": user_name,
+                "role_name": role_name,
+                "message": f"Role updated successfully for {len(user_tenants)} tenant(s)"
+            }
         except AdminException:
             raise
         except Exception as e:
@@ -254,7 +266,7 @@ class RoleMgr:
 
     @staticmethod
     def get_user_permission(user_name: str) -> Dict[str, Any]:
-        """Get user's permissions based on their role"""
+        """Get user's permissions based on their role from user_tenant table"""
         try:
             # Get user
             users = UserService.query(email=user_name)
@@ -262,12 +274,25 @@ class RoleMgr:
                 raise AdminException(f"User '{user_name}' not found", 404)
             
             user = users[0]
-            role_name = getattr(user, 'role', 'user')  # Default to 'user' role
+            
+            # Get role from user_tenant table
+            from api.db.services.user_service import UserTenantService
+            user_tenants = UserTenantService.query(user_id=user.id)
+            
+            if not user_tenants:
+                return {
+                    "user": {"id": user.id, "username": user_name, "role": "none"},
+                    "role_permissions": {},
+                    "message": "User has no tenant association"
+                }
+            
+            role_name = user_tenants[0].role if hasattr(user_tenants[0], 'role') else None
             
             if not role_name:
                 return {
                     "user": {"id": user.id, "username": user_name, "role": "none"},
-                    "role_permissions": {}
+                    "role_permissions": {},
+                    "message": "User has no role assigned"
                 }
             
             # Get role
@@ -275,7 +300,8 @@ class RoleMgr:
             if not role:
                 return {
                     "user": {"id": user.id, "username": user_name, "role": role_name},
-                    "role_permissions": {}
+                    "role_permissions": {},
+                    "message": f"Role '{role_name}' not found in roles table"
                 }
             
             # Get permissions

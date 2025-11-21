@@ -33,12 +33,21 @@ from config import SERVICE_CONFIGS
 class UserMgr:
     @staticmethod
     def get_all_users():
+        from api.db.services.user_service import UserTenantService
         users = UserService.get_all_users()
         result = []
         for user in users:
+            # Get user's role from user_tenant table
+            user_tenants = UserTenantService.query(user_id=user.id)
+            role = None
+            if user_tenants:
+                # Get the first tenant's role (most users have one tenant)
+                role = user_tenants[0].role if hasattr(user_tenants[0], 'role') else None
+            
             result.append({
                 'email': user.email,
                 'nickname': user.nickname,
+                'role': role,  # Add role field
                 'create_date': user.create_date,
                 'is_active': user.is_active,
                 'is_superuser': user.is_superuser,
