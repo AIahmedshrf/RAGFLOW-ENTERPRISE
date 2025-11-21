@@ -156,7 +156,3 @@ class RolePermissionService:
     def delete_by_role(cls, role_id):
         """Delete all permissions for a role"""
         cls.model.delete().where(cls.model.role_id == role_id).execute()
-
-
-# Import DB after defining services
-from api.db.db_models import DB

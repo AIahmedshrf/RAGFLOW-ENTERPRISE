@@ -200,11 +200,25 @@ def list_roles():
 def list_roles_with_permission():
     """List all roles with their permissions"""
     try:
-        roles = RoleMgr.list_roles()
-        for role in roles:
-            permissions = RoleMgr.get_role_permission(role['role_name'])
-            role['permissions'] = permissions
-        return get_json_result(data=roles)
+        roles_data = RoleMgr.list_roles()
+        roles_list = roles_data.get('roles', [])
+        
+        result = []
+        for role in roles_list:
+            permissions_data = RoleMgr.get_role_permission(role['role_name'])
+            role_with_perms = {
+                "id": role['id'],
+                "role_name": role['role_name'],
+                "description": role['description'],
+                "create_date": role['create_date'],
+                "update_date": role['update_date'],
+                "permissions": permissions_data.get('permissions', {})
+            }
+            result.append(role_with_perms)
+        
+        return get_json_result(data={"roles": result, "total": len(result)})
+    except AdminException as e:
+        return get_json_result(code=e.code, message=str(e))
     except Exception as e:
         logging.error(f"list_roles_with_permission error: {e}")
         return server_error_response(str(e))
@@ -255,15 +269,19 @@ def grant_role_permission(role_name):
     """Grant permissions to a role"""
     try:
         data = request.json
-        resource_type = data.get('resource_type')
-        action = data.get('action')
-        enable = data.get('enable', True)
+        resource = data.get('resource')
+        actions = data.get('actions', [])
         
-        if not resource_type or not action:
-            return get_json_result(code=400, message="resource_type and action are required")
+        if not resource:
+            return get_json_result(code=400, message="resource is required")
         
-        result = RoleMgr.grant_role_permission(role_name, resource_type, action, enable)
+        if not actions or not isinstance(actions, list):
+            return get_json_result(code=400, message="actions must be a non-empty list")
+        
+        result = RoleMgr.grant_role_permission(role_name, actions, resource)
         return get_json_result(data=result)
+    except AdminException as e:
+        return get_json_result(code=e.code, message=str(e))
     except Exception as e:
         logging.error(f"grant_role_permission error: {e}")
         return server_error_response(str(e))
@@ -274,14 +292,20 @@ def grant_role_permission(role_name):
 def revoke_role_permission(role_name):
     """Revoke permissions from a role"""
     try:
-        data = request.json
-        resource_type = data.get('resource_type')
+        resource = request.args.get('resource')
+        actions_str = request.args.get('actions', '')
+        actions = [a.strip() for a in actions_str.split(',') if a.strip()]
         
-        if not resource_type:
-            return get_json_result(code=400, message="resource_type is required")
+        if not resource:
+            return get_json_result(code=400, message="resource is required")
         
-        result = RoleMgr.revoke_role_permission(role_name, resource_type)
+        if not actions:
+            return get_json_result(code=400, message="actions is required")
+        
+        result = RoleMgr.revoke_role_permission(role_name, actions, resource)
         return get_json_result(data=result)
+    except AdminException as e:
+        return get_json_result(code=e.code, message=str(e))
     except Exception as e:
         logging.error(f"revoke_role_permission error: {e}")
         return server_error_response(str(e))
