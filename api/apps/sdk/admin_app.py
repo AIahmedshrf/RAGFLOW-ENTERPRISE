@@ -22,6 +22,7 @@ import logging
 from flask import request, jsonify
 from flask_login import login_required, current_user
 from api.utils.api_utils import get_json_result, server_error_response
+from api.common.exceptions import AdminException
 
 # Override page_name to prevent double /admin prefix
 page_name = ""
